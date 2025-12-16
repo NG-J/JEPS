@@ -1,0 +1,140 @@
+ <%
+  const role = user && user.role ? user.role.toLowerCase().trim() : '';
+  const CAN_ADD = role === 'admin' || role === 'forensic';
+  const CAN_DELETE = role === 'admin';
+%>
+
+<%- include('layout', { 
+  title: 'Evidence', 
+  user, 
+  body: `
+<h2 style="text-align:center;">Evidence</h2>
+
+${CAN_ADD ? `
+  <div style="text-align:center;margin-bottom:20px;">
+    <button class="btn" id="addEvidenceBtn">Add Evidence</button>
+  </div>
+` : ''}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Case ID</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="evidenceBody"></tbody>
+</table>
+
+
+<div id="evidenceModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Add Evidence</h3>
+    <input id="caseId" type="number" placeholder="Case ID">
+    <input id="type" type="text" placeholder="Type">
+    <input id="filePath" type="text" placeholder="File path (or note)">
+    <button class="btn" id="saveEvidence">Save</button>
+  </div>
+</div>
+
+<style>
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); }
+.modal-content { background:black; width:400px; margin:10% auto; padding:20px; border-radius:10px; text-align:center; }
+.modal-content input { width:90%; margin:8px 0; padding:8px; }
+.close { float:right; cursor:pointer; }
+</style>
+
+<script>
+const CAN_DELETE = ${CAN_DELETE};
+const tbody = document.getElementById('evidenceBody');
+
+// this loadoad evidence from backend
+async function loadEvidence() {
+  try {
+    const res = await fetch('/api/evidence', { credentials:'include' });
+    if (!res.ok) throw new Error('Failed to load evidence');
+    const data = await res.json();
+
+    tbody.innerHTML = '';
+    data.forEach(e => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = \`
+        <td>\${e.id}</td>
+        <td>\${e.case_id}</td>
+        <td>\${e.type}</td>
+        <td>\${e.status}</td>
+        <td>\${CAN_DELETE
+          ? '<button class="btn delete" data-id="\${e.id}">Delete</button>'
+          : '—'}
+        </td>
+      \`;
+      tbody.appendChild(tr);
+    });
+
+    //DELETE BUTTTOMS ARE ADDED FOR EACH EVIDENCE 
+    if (CAN_DELETE) {
+      document.querySelectorAll('.btn.delete').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          if (!confirm('Delete this evidence?')) return;
+
+          try {
+            const res = await fetch('/api/evidence/' + id, {
+              method: 'DELETE',
+              credentials: 'include'
+            });
+
+            if (!res.ok) throw new Error('Failed to delete evidence');
+            loadEvidence(); // RELOAD AFTER DELETEION
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+      });
+    }
+
+  } catch (err) {
+    alert(err.message);
+    console.error(err);
+  }
+}
+
+//THIS IS FOR THE MODAL 
+const modal = document.getElementById('evidenceModal');
+document.getElementById('addEvidenceBtn')?.addEventListener('click', () => {
+  modal.style.display = 'block';
+});
+modal.querySelector('.close').onclick = () => modal.style.display = 'none';
+
+// THIS IS USED TOSAVE EVIDENCE
+document.getElementById('saveEvidence').onclick = async () => {
+  const case_id = document.getElementById('caseId').value;
+  const type = document.getElementById('type').value;
+  const file_path = document.getElementById('filePath').value;
+
+  if (!case_id || !type) return alert('Fill required fields');
+
+  try {
+    const res = await fetch('/api/evidence', {
+      method:'POST',
+      credentials:'include',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ case_id, type, file_path })
+    });
+    if (!res.ok) throw new Error('Failed to add evidence');
+    modal.style.display = 'none';
+    loadEvidence();
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+// Initial load
+loadEvidence();
+</script>
+` }) %>  
+

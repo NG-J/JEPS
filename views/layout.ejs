@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+
+<%
+  const role = user && user.role ? user.role.toLowerCase().trim() : '';
+  const IS_ADMIN = role === 'admin';
+%>
+
+<div class="navbar">
+  <span class="logo">JEPS</span>
+
+  <div class="nav-links">
+    <a href="/">Home</a>
+
+    <% if (user) { %>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/cases">Cases</a>
+      <a href="/evidence">Evidence</a>
+
+      <% if (IS_ADMIN) { %>
+        <a href="/users">Users</a>
+        <a href="/logs">Logs</a>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<main class="container">
+  <%- body %>
+</main>
+
+</body>
+</html>
+
+
+
+

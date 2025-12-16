@@ -1,0 +1,19 @@
+<%- include('layout', { title: 'Logs', user, body: `
+<h2>Activity Logs</h2>
+<table class="table">
+  <thead>
+    <tr><th>User</th><th>Action</th><th>Entity</th><th>Date</th></tr>
+  </thead>
+  <tbody>
+    ${logs.map(l => `
+      <tr>
+        <td>${l.name}</td>
+        <td>${l.action}</td>
+        <td>${l.entity}</td>
+        <td>${new Date(l.created_at).toLocaleString()}</td>
+      </tr>`).join('')}
+  </tbody>
+</table>
+` }) %>
+
+

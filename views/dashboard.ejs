@@ -1,0 +1,19 @@
+<%- include('layout', { 
+  title: 'Dashboard', 
+  user, 
+  body: `
+    <div class="dashboard-container">
+      <h1 class="dashboard-title">Dashboard</h1>
+      <div class="user-info">
+        <p>Role: <strong>${user.role}</strong></p>
+        <p>Welcome, <strong>${user.name}</strong></p>
+      </div>
+      <div class="cards">
+        <div class="card">Cases Management</div>
+        <div class="card">Evidence Tracking</div>
+        ${user.role === 'Admin' ? '<div class="card">User Management</div><div class="card">Activity Logs</div>' : ''}
+        ${user.role === 'Forensic' ? '<div class="card">Forensic Uploads</div>' : ''}
+      </div>
+    </div>
+  ` 
+}) %>

@@ -1,0 +1,9 @@
+<%- include('layout', { title: 'Login', body: `
+<form method="POST" action="/api/auth/login" class="form-container">
+  <h2>Login</h2>
+  <input name="email" placeholder="Email" required>
+  <input name="password" type="password" placeholder="Password" required>
+  <button class="btn">Login</button>
+</form>
+` }) %>
+

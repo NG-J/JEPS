@@ -1,0 +1,111 @@
+<%- include('layout', { 
+  title: 'Users', 
+  user, 
+  body: `
+<h2 style="text-align:center;">User Management</h2>
+<div style="text-align:center; margin-bottom:15px;">
+  <button class="btn" id="add-user-btn">Add User</button>
+</div>
+
+<table class="table">
+  <thead>
+    <tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+  </thead>
+  <tbody id="userList"></tbody>
+</table>
+
+
+<div id="user-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Add User</h3>
+    <input type="text" id="user-name" placeholder="Name" />
+    <input type="email" id="user-email" placeholder="Email" />
+    <input type="password" id="user-password" placeholder="Password" />
+    <select id="user-role">
+      <option value="Admin">Admin</option>
+      <option value="Clerk">Clerk</option>
+      <option value="Prosecutor">Prosecutor</option>
+      <option value="Forensic Officer">Forensic Officer</option>
+    </select>
+    <button id="save-user" class="btn">Save</button>
+  </div>
+</div>
+
+<style>
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000; }
+.modal-content { background:#f4f4f4; margin:10% auto; padding:20px; border-radius:10px; width:400px; text-align:center; }
+.modal-content input, .modal-content select { width:90%; margin:8px 0; padding:8px; }
+.modal-content .close { float:right; font-size:1.5rem; cursor:pointer; }
+</style>
+
+<script>
+const userModal = document.getElementById('user-modal');
+const addUserBtn = document.getElementById('add-user-btn');
+const closeModal = userModal.querySelector('.close');
+const saveUserBtn = document.getElementById('save-user');
+const userList = document.getElementById('userList');
+
+addUserBtn.onclick = () => {
+  userModal.style.display = 'block';
+  document.getElementById('user-name').value = '';
+  document.getElementById('user-email').value = '';
+  document.getElementById('user-password').value = '';
+  document.getElementById('user-role').value = 'Clerk';
+};
+
+closeModal.onclick = () => userModal.style.display = 'none';
+window.onclick = (e) => { if(e.target === userModal) userModal.style.display = 'none'; };
+
+async function fetchUsers() {
+  try {
+    const res = await fetch('/api/users', { credentials: 'include' });
+    const users = await res.json();
+    userList.innerHTML = '';
+    users.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = \`
+        <td>\${u.name}</td>
+        <td>\${u.email}</td>
+        <td>\${u.role}</td>
+        <td><button class="btn delete" onclick="deleteUser(\${u.id})">Delete</button></td>
+      \`;
+      userList.appendChild(tr);
+    });
+  } catch(err) { console.error(err); alert('Failed to fetch users'); }
+}
+
+saveUserBtn.onclick = async () => {
+  const name = document.getElementById('user-name').value.trim();
+  const email = document.getElementById('user-email').value.trim();
+  const password = document.getElementById('user-password').value.trim();
+  const role = document.getElementById('user-role').value;
+
+  if(!name || !email || !password) return alert('Please fill all fields');
+
+  try {
+    await fetch('/api/users', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, role })
+    });
+    userModal.style.display = 'none';
+    fetchUsers();
+  } catch(err) { console.error(err); alert('Failed to add user'); }
+};
+
+async function deleteUser(id) {
+  if(!confirm('Delete this user?')) return;
+  try {
+    await fetch('/api/users/' + id, { method: 'DELETE', credentials: 'include' });
+    fetchUsers();
+  } catch(err) { console.error(err); alert('Failed to delete user'); }
+}
+
+// Load users on page load
+fetchUsers();
+</script>
+` }) %>
+
+
